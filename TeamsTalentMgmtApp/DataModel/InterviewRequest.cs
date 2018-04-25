@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace TeamsToDoApp.DataModel
+namespace TeamsTalentMgmtApp.DataModel
 {
     public class InterviewRequest
     {

@@ -7,14 +7,14 @@ using Microsoft.Bot.Connector;
 using Microsoft.Bot.Connector.Teams;
 using Microsoft.Bot.Connector.Teams.Models;
 
-namespace TeamsSampleHRApp
+namespace TeamsTalentMgmtApp
 {
     [BotAuthentication]
     public class MessagesController : ApiController
     {
 
         /// <summary>
-        /// POST: api/Messages
+        /// POST: api/messages
         /// Receive a message from a user and reply to it
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
@@ -27,7 +27,7 @@ namespace TeamsSampleHRApp
             }
             else if (activity.Type == ActivityTypes.Invoke) 
             {
-                //Compose extensions come in as Invokes.  Leverage the Teams SDK helper functions
+                //Compose extensions come in as Invokes. Leverage the Teams SDK helper functions
                 if (activity.IsComposeExtensionQuery())
                 {
                     // Determine the response object to reply with
