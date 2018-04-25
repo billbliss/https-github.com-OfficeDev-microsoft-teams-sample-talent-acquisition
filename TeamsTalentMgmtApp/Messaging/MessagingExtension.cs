@@ -4,11 +4,10 @@ using Microsoft.Bot.Connector.Teams;
 using Microsoft.Bot.Connector.Teams.Models;
 using System;
 using System.Collections.Generic;
-using TeamsSampleHRApp.Utils;
-using TeamsToDoApp.DataModel;
-using TeamsToDoApp.Utils;
+using TeamsTalentMgmtApp.Utils;
+using TeamsTalentMgmtApp.DataModel;
 
-namespace TeamsSampleHRApp
+namespace TeamsTalentMgmtApp
 {
     /// <summary>
     /// Simple class that processes an activity and responds with with set of messaging extension results.

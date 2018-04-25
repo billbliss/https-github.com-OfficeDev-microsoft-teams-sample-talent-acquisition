@@ -3,9 +3,9 @@ using Microsoft.Bot.Connector.Teams.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using TeamsToDoApp.DataModel;
+using TeamsTalentMgmtApp.DataModel;
 
-namespace TeamsToDoApp.Utils
+namespace TeamsTalentMgmtApp.Utils
 {
     /// <summary>
     /// Helper class to generate cards based off the existing data models.

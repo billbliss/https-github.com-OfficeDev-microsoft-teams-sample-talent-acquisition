@@ -4,14 +4,13 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Connector.Teams; //Teams bot extension SDK
 using Microsoft.Bot.Connector.Teams.Models;
-using TeamsSampleHRApp.Utils;
+using TeamsTalentMgmtApp.Utils;
 using System.Linq;
 using System.Collections.Generic;
-using TeamsToDoApp.DataModel;
+using TeamsTalentMgmtApp.DataModel;
 using Newtonsoft.Json.Linq;
-using TeamsToDoApp.Utils;
 
-namespace TeamsSampleHRApp.Dialogs
+namespace TeamsTalentMgmtApp.Dialogs
 {
     /// <summary>
     /// Basic dialog implemention showing how to create an interactive chat bot.

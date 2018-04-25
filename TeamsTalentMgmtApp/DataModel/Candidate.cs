@@ -1,4 +1,4 @@
-﻿namespace TeamsToDoApp.DataModel
+﻿namespace TeamsTalentMgmtApp.DataModel
 {
     public class Candidate
     {

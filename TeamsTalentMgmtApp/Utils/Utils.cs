@@ -1,9 +1,9 @@
 ﻿using Bogus;
 using System;
 using System.Collections.Generic;
-using TeamsToDoApp.DataModel;
+using TeamsTalentMgmtApp.DataModel;
 
-namespace TeamsSampleHRApp.Utils
+namespace TeamsTalentMgmtApp.Utils
 {
     public static class Constants
     {
