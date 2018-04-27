@@ -2,9 +2,11 @@
 using System;
 using System.Collections.Generic;
 using TeamsTalentMgmtApp.DataModel;
+using static Bogus.DataSets.Name;
 
 namespace TeamsTalentMgmtApp.Utils
 {
+
     public static class Constants
     {
         public static List<string> Titles = new List<string>
@@ -71,17 +73,16 @@ namespace TeamsTalentMgmtApp.Utils
 
     public class CandidatesDataController
     {
+        const int numPeople = 5;
+
         public List<Candidate> GetTopCandidates(string reqId)
         {
-            const int numCandidates = 3;
-
             List<Candidate> resp = new List<Candidate>();
 
-            for (int i = 0; i < numCandidates; i++)
+            for (int i = 0; i < numPeople; i++)
             {
-                Candidate c = GenerateCandidate();
+                Candidate c = GenerateCandidate(i + 1);
                 c.ReqId = reqId;
-                c.ProfilePicture = Utils.GetRootUrl() + $"/images/candidate_{(i + 1)}.png";
                 resp.Add(c);
             }
             return resp;
@@ -89,24 +90,25 @@ namespace TeamsTalentMgmtApp.Utils
 
         public Candidate GetCandidateByName(string name)
         {
-            Candidate c = GenerateCandidate();
+            Candidate c = GenerateCandidate(1);
             c.Name = name;
             return c;
         }
 
-        private Candidate GenerateCandidate()
+        private Candidate GenerateCandidate(int index)
         {
             Random r = new Random();
             var faker = new Faker();
+            Person p = faker.Person;
 
             Candidate c = new Candidate()
             {
-                Name = $"{faker.Name.FirstName()} {faker.Name.LastName()}",
+                Name = $"{p.FirstName} {p.LastName}",
                 CurrentRole = faker.PickRandom(Constants.Titles),
-                Hires = r.Next() % 3,
-                NoHires = r.Next() % 3,
+                Hires = r.Next() % 4,
+                NoHires = r.Next() % 4,
                 Stage = faker.PickRandom(Constants.Stages),
-                ProfilePicture = Utils.GetRootUrl() + $"/images/candidate_{(r.Next(1, 3))}.png",
+                ProfilePicture = Utils.GetRootUrl() + $"/images/" + p.Gender.ToString().ToLower() + $"/candidate_{index}.png",
                 ReqId = Guid.NewGuid().ToString().Split('-')[0].ToUpper()
             };
 

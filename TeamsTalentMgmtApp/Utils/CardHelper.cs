@@ -1,8 +1,10 @@
-﻿using Microsoft.Bot.Connector;
+﻿using AdaptiveCards;
+using Microsoft.Bot.Connector;
 using Microsoft.Bot.Connector.Teams.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Web;
 using TeamsTalentMgmtApp.DataModel;
 
 namespace TeamsTalentMgmtApp.Utils
@@ -12,6 +14,11 @@ namespace TeamsTalentMgmtApp.Utils
     /// </summary>
     public class CardHelper
     {
+        /// <summary>
+        /// JSON template.
+        /// </summary>
+        private static string cardJson = System.IO.File.ReadAllText(HttpContext.Current.Server.MapPath("~/cardtemplate.json"));
+
         #region Card Helpers
 
         public static ThumbnailCard CreateCardForCandidate(Candidate c)
@@ -38,6 +45,13 @@ namespace TeamsTalentMgmtApp.Utils
                     new CardAction("messageBack", "Schedule interview", null, ctx, "schedule interview", $"Schedule interview with {c.Name}"),
                     new CardAction("openUrl", "Read feedback", null, "https://www.microsoft.com"),
                 };
+
+            return card;
+        }
+
+        public static AdaptiveCard CreateAdaptiveCardForInterviewRequest(InterviewRequest request, Candidate c)
+        {
+            AdaptiveCard card = AdaptiveCard.FromJson(cardJson).Card;
 
             return card;
         }
