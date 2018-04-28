@@ -9,6 +9,7 @@ using System.Linq;
 using System.Collections.Generic;
 using TeamsTalentMgmtApp.DataModel;
 using Newtonsoft.Json.Linq;
+using AdaptiveCards;
 
 namespace TeamsTalentMgmtApp.Dialogs
 {
@@ -80,6 +81,10 @@ namespace TeamsTalentMgmtApp.Dialogs
                 {
                     await SendOpenPositionsMessage(context);
                 }
+                else if (cmd.Contains("adaptive"))
+                {
+                    await SendAdaptiveMessage(context);
+                }
                 else if (cmd.Contains("assign"))
                 {
                     string guid = split[1];
@@ -141,6 +146,25 @@ namespace TeamsTalentMgmtApp.Dialogs
             };
 
             await SendScheduleInterviewMessage(context, request);
+        }
+
+        private async Task SendAdaptiveMessage(IDialogContext context)
+        {
+            IMessageActivity reply = context.MakeMessage();
+            reply.Attachments = new List<Attachment>();
+            reply.Text = $"Here's your card:";
+
+            AdaptiveCard card = CardHelper.CreateAdaptiveCardForInterviewRequest(null, null);
+            Attachment attachment = new Attachment()
+            {
+                ContentType = AdaptiveCard.ContentType,
+                Content = card
+            };
+
+            reply.Attachments.Add(attachment);
+
+            ConnectorClient client = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
+            ResourceResponse resp = await client.Conversations.ReplyToActivityAsync((Activity)reply);
         }
 
         // Send a message with a list of found tasks.
