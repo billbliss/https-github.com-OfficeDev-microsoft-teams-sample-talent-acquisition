@@ -2,7 +2,7 @@
   "$schema": "https://statics.teams.microsoft.com/sdk/v1.0/manifest/MicrosoftTeams.schema.json",
   "manifestVersion": "1.0",
   "version": "1.0.0",
-  "id": "bc2c2ad5-eace-4c6b-a91d-eb423761a0f8",
+  "id": "00000000-0000-0000-0000-000000000000",
   "packageName": "com.microsoft.teams.samples.hrapp",
   "developer": {
     "name": "Microsoft",
@@ -27,8 +27,8 @@
     {
       "entityId": "candidatesTab",
       "name": "Candidates",
-      "contentUrl": "https://teamssamplehrapp.azurewebsites.net/candidates.html",
-      "websiteUrl": "https://teamssamplehrapp.azurewebsites.net/candidates.html?web=1",
+      "contentUrl": "https://yourapp.url/candidates.html",
+      "websiteUrl": "https://yourapp.url/candidates.html?web=1",
       "scopes": [
         "personal"
       ]
@@ -36,7 +36,7 @@
   ],
   "configurableTabs": [
     {
-      "configurationUrl": "https://teamssamplehrapp.azurewebsites.net/channelconfig.html",
+      "configurationUrl": "https://yourapp.url/channelconfig.html",
       "canUpdateConfiguration": true,
       "scopes": [
         "team"
@@ -45,7 +45,7 @@
   ],
   "bots": [
     {
-      "botId": "c201df69-7490-40c3-aa7f-aef4254cb1ee",
+      "botId": "00000000-0000-0000-0000-000000000000",
       "scopes": [
         "team",
         "personal"
@@ -88,7 +88,7 @@
   ],
   "composeExtensions": [
     {
-      "botId": "c201df69-7490-40c3-aa7f-aef4254cb1ee",
+      "botId": "00000000-0000-0000-0000-000000000000",
       "scopes": [
         "personal",
         "team"
@@ -115,7 +115,6 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "teams-sampleappnode.azurewebsites.net",
-    "teamssamplehrapp.azurewebsites.net"
+    "your.url"
   ]
 }
