@@ -104,7 +104,7 @@ namespace TeamsTalentMgmtApp.Dialogs
                 }
                 else if (text.Contains("welcome") || text.Contains("hello") || text.Contains("hi"))
                 {
-                    await SendHelpMessage(context, "## Welcome to the Contoso HR app");
+                    await SendHelpMessage(context, "## Welcome to the Contoso Talent Management app");
                 }
                 else
                 // Don't know what to say so this is the generic handling here.
@@ -126,9 +126,9 @@ namespace TeamsTalentMgmtApp.Dialogs
         /// <returns></returns>
         private async Task SendHelpMessage(IDialogContext context, string firstLine)
         {
-            var helpMessage = $"{firstLine} \n\n Here's what I can help you do \n\n"
-                + "* Show top recent candidates for a Req ID, ex// 0F812D01 \n"
-                + "* Schedule interview for name and Req ID, ex// John Smith 0F812D01 \n"
+            var helpMessage = $"{firstLine} \n\n Here's what I can help you do: \n\n"
+                + "* Show top recent candidates for a Req ID, for example: top candidates 0F812D01 \n"
+                + "* Schedule interview for name and Req ID, for example: schedule interview John Smith 0F812D01 \n"
                 + "* List all my open positions";
 
             await context.PostAsync(helpMessage);
@@ -139,7 +139,7 @@ namespace TeamsTalentMgmtApp.Dialogs
             InterviewRequest request = new InterviewRequest
             {
                 CandidateName = name,
-                Date = new DateTime(),
+                Date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day),
                 PositionTitle = new OpenPositionsDataController().GetPositionForReqId(reqId).Title,
                 Remote = false,
                 ReqId = reqId
