@@ -84,7 +84,7 @@ namespace TeamsTalentMgmtApp.Utils
                 Inputs = new List<O365ConnectorCardInputBase>()
             };
             updateDateAction.Actions.Add(new O365ConnectorCardHttpPOST("HttpPOST", "Schedule", "scheduleInterview", request.ReqId));
-            updateDateAction.Inputs.Add(new O365ConnectorCardDateInput("DateInput", "interviewDate", false, "Interview date", new DateTime().ToString("MMM d, yyyy"), false));
+            updateDateAction.Inputs.Add(new O365ConnectorCardDateInput("DateInput", "interviewDate", false, "Interview date", new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day).ToString("MMM d, yyyy"), false));
             section.PotentialAction.Add(updateDateAction);
 
             actionableCard.Sections.Add(section);
