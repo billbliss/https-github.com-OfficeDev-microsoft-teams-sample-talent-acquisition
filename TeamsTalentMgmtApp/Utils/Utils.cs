@@ -33,13 +33,11 @@ namespace TeamsTalentMgmtApp.Utils
     public class OpenPositionsDataController
     {
 
-        public List<OpenPosition> ListOpenPositions()
+        public List<OpenPosition> ListOpenPositions(int count)
         {
-            const int numPositions = 5;
-
             List<OpenPosition> resp = new List<OpenPosition>();
 
-            for (int i = 0; i < numPositions; i++)
+            for (int i = 0; i < count; i++)
             {
                 resp.Add(GeneratePosition());
             }
@@ -95,6 +93,26 @@ namespace TeamsTalentMgmtApp.Utils
             return c;
         }
 
+        public List<Candidate> GetReferrals(Candidate c)
+        {
+            List<Candidate> referrals = new List<Candidate>();
+            for (int i = 0; i < 3; i++)
+            {
+                referrals.Add(GenerateCandidate(i+1));
+            }
+            return referrals;
+        }
+
+        public string GetCandidateBio(Candidate c)
+        {
+            return "Ten years of experience in the software industry. Five years experience working at a software consulting firm.";
+        }
+
+        /// <summary>
+        /// Index is 1-based, not 0-based
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private Candidate GenerateCandidate(int index)
         {
             Random r = new Random();

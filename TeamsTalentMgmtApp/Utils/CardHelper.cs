@@ -1,6 +1,8 @@
 ﻿using AdaptiveCards;
+using Bogus;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Connector.Teams.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -23,8 +25,6 @@ namespace TeamsTalentMgmtApp.Utils
 
         public static ThumbnailCard CreateCardForCandidate(Candidate c)
         {
-            var random = new Random();
-
             ThumbnailCard card = new ThumbnailCard()
             {
                 Title = c.Name,
@@ -39,25 +39,216 @@ namespace TeamsTalentMgmtApp.Utils
             ctx["reqId"] = c.ReqId;
             ctx["name"] = c.Name;
 
+            JObject cJson = JObject.FromObject(c);
+
             card.Buttons = new List<CardAction>()
                 {
-                    new CardAction("openUrl", "See details", null, "https://www.microsoft.com"),
-                    new CardAction("messageBack", "Schedule interview", null, ctx, "schedule interview", $"Schedule interview with {c.Name}"),
+                    new CardAction("messageBack", "See details", null, cJson, "candidate details", $"candidate details {c.Name}"),
+                    new CardAction("messageBack", "Schedule interview", null, cJson, "schedule interview", $"Schedule interview with {c.Name}"),
                     new CardAction("openUrl", "Read feedback", null, "https://www.microsoft.com"),
                 };
 
             return card;
         }
 
-        public static AdaptiveCard CreateAdaptiveCardForInterviewRequest(InterviewRequest request, Candidate c)
+        public static ThumbnailCard CreatePreviewCardForCandidate(Candidate c)
         {
-            AdaptiveCard card = AdaptiveCard.FromJson(cardJson).Card;
+            ThumbnailCard card = new ThumbnailCard()
+            {
+                Title = c.Name,
+                Subtitle = $"Job ID: {c.ReqId}",
+                Text = $"Current role: {c.CurrentRole}",
+                Images = new List<CardImage>()
+            };
+
+            card.Images.Add(new CardImage(c.ProfilePicture));
+            return card;
+        }
+
+        public static AdaptiveCard CreateAdaptiveCardForCandidateInfo(Candidate c)
+        {
+            AdaptiveCard card = new AdaptiveCard();
+            card.Body = new List<AdaptiveElement>();
+            AdaptiveContainer header = new AdaptiveContainer();
+            card.Body.Add(header);
+
+            header.Items = new List<AdaptiveElement>();
+            header.Items.Add(new AdaptiveTextBlock()
+            {
+                Text = c.Name,
+                Weight = AdaptiveTextWeight.Bolder,
+                Size = AdaptiveTextSize.Large
+            });
+
+            AdaptiveColumnSet headerDetails = new AdaptiveColumnSet();
+            header.Items.Add(headerDetails);
+
+            AdaptiveColumn col1 = new AdaptiveColumn();
+            col1.Width = AdaptiveColumnWidth.Auto;
+            col1.Items = new List<AdaptiveElement>
+            {
+                new AdaptiveImage()
+                {
+                    Url = new Uri(c.ProfilePicture),
+                    Size = AdaptiveImageSize.Small,
+                    Style = AdaptiveImageStyle.Person
+                }
+            };
+
+            AdaptiveColumn col2 = new AdaptiveColumn();
+            col2.Width = AdaptiveColumnWidth.Stretch;
+            col2.Items = new List<AdaptiveElement>
+            {
+                new AdaptiveTextBlock()
+                {
+                    Text = $"Applied {DateTime.Today.ToString("MM/dd/yyyy")}",
+                    Wrap = true
+                },
+                new AdaptiveTextBlock()
+                {
+                    Text = $"Current role {c.CurrentRole}",
+                    Spacing = AdaptiveSpacing.None,
+                    Wrap = true,
+                    IsSubtle = true
+                }
+            };
+
+            headerDetails.Columns = new List<AdaptiveColumn>
+            {
+                col1,
+                col2
+            };
+
+            AdaptiveContainer details = new AdaptiveContainer();
+
+            AdaptiveTextBlock candidateSummary = new AdaptiveTextBlock()
+            {
+                Text = new CandidatesDataController().GetCandidateBio(c),
+                Wrap = true
+            };
+
+            AdaptiveFactSet factsCol1 = new AdaptiveFactSet();
+            factsCol1.Facts = new List<AdaptiveFact>
+            {
+                new AdaptiveFact("Applied to position", c.ReqId),
+                new AdaptiveFact("Interview date", "Not set")
+            };
+
+            AdaptiveFactSet factsCol2 = new AdaptiveFactSet();
+            factsCol2.Facts = new List<AdaptiveFact>
+            {
+                new AdaptiveFact("Hires", c.Hires.ToString()),
+                new AdaptiveFact("No hires", c.NoHires.ToString())
+            };
+
+            AdaptiveColumnSet factColumns = new AdaptiveColumnSet()
+            {
+                Columns = new List<AdaptiveColumn>
+                {
+                    new AdaptiveColumn()
+                    {
+                        Items = new List<AdaptiveElement>
+                        {
+                            factsCol1
+                        },
+                        Width = AdaptiveColumnWidth.Stretch
+                    },
+
+                    new AdaptiveColumn()
+                    {
+                        Items = new List<AdaptiveElement>
+                        {
+                            factsCol2
+                        },
+                        Width = AdaptiveColumnWidth.Stretch
+                    }
+                }
+            };
+
+            details.Items = new List<AdaptiveElement>
+            {
+                candidateSummary,
+                factColumns
+            };
+
+            card.Body.Add(details);
+
+            AdaptiveImageSet referrals = new AdaptiveImageSet();
+            referrals.ImageSize = AdaptiveImageSize.Small;
+            referrals.Images = new List<AdaptiveImage>();
+
+            foreach(Candidate referral in new CandidatesDataController().GetReferrals(c))
+            {
+                referrals.Images.Add(new AdaptiveImage()
+                {
+                    Url = new Uri(referral.ProfilePicture),
+                    Style = AdaptiveImageStyle.Person
+                });
+            }
+
+            card.Body.Add(new AdaptiveTextBlock()
+            {
+                Text = "Referrals",
+                Size = AdaptiveTextSize.Large
+            });
+            card.Body.Add(referrals);
+
+            AdaptiveAction setInterview = new AdaptiveShowCardAction()
+            {
+                Title = "Set interview date",
+                Card = new AdaptiveCard()
+                {
+                    Body = new List<AdaptiveElement> {
+                        new AdaptiveDateInput()
+                        {
+                            Id = "InterviewDate",
+                            Placeholder = "Enter in a date for the interview"
+                        }
+                    },
+                    Actions = new List<AdaptiveAction>
+                    {
+                        new AdaptiveSubmitAction()
+                        {
+                            Title = "OK"
+                        }
+                    }
+                }
+            };
+
+            AdaptiveAction setComment = new AdaptiveShowCardAction()
+            {
+                Title = "Add comment",
+                Card = new AdaptiveCard()
+                {
+                    Body = new List<AdaptiveElement> {
+                        new AdaptiveTextInput()
+                        {
+                            Id = "Comment",
+                            Placeholder = "Add a comment for this candidate",
+                            IsMultiline = true
+                        }
+                    },
+                    Actions = new List<AdaptiveAction>
+                    {
+                        new AdaptiveSubmitAction()
+                        {
+                            Title = "OK"
+                        }
+                    }
+                }
+            };
+
+            card.Actions = new List<AdaptiveAction>
+            {
+                setInterview,
+                setComment
+            };
 
             return card;
         }
 
         // Helps create an O365 actionable message for a particular task.
-        public static O365ConnectorCard CreateCardForInterviewRequest(InterviewRequest request, Candidate c)
+        public static O365ConnectorCard CreateCardForInterviewRequest(InterviewRequest request)
         {
             var random = new Random();
 
@@ -68,10 +259,10 @@ namespace TeamsTalentMgmtApp.Utils
 
             O365ConnectorCardSection section = new O365ConnectorCardSection()
             {
-                ActivityTitle = request.CandidateName,
+                ActivityTitle = request.Candidate.Name,
                 ActivitySubtitle = $"For position: {request.PositionTitle}",
                 ActivityText = $"Req ID: {request.ReqId}",
-                ActivityImage = c.ProfilePicture,
+                ActivityImage = request.Candidate.ProfilePicture,
                 PotentialAction = new List<O365ConnectorCardActionBase>()
             };
 

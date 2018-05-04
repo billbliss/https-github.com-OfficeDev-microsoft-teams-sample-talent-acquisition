@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using TeamsTalentMgmtApp.DataModel;
 using Newtonsoft.Json.Linq;
 using AdaptiveCards;
+using System.Configuration;
+using System.Net.Http;
 
 namespace TeamsTalentMgmtApp.Dialogs
 {
@@ -19,6 +21,11 @@ namespace TeamsTalentMgmtApp.Dialogs
     [Serializable]
     public class RootDialog : IDialog<object>
     {
+        /// <summary>
+        /// Managing connection
+        /// </summary>
+        private static string ConnectionName = ConfigurationManager.AppSettings["ConnectionName"];
+
         public Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
@@ -63,7 +70,8 @@ namespace TeamsTalentMgmtApp.Dialogs
                     // Check if this is a button press or a text command.
                     if (ctx != null)
                     {
-                        await SendScheduleInterviewMessage(context, ctx["name"].ToString(), ctx["reqId"].ToString());
+                        Candidate c = ctx.ToObject<Candidate>();
+                        await SendScheduleInterviewMessage(context, c, c.ReqId);
                     }
                     else if (keywords.Length == 3)
                     {
@@ -72,7 +80,8 @@ namespace TeamsTalentMgmtApp.Dialogs
 
                         // Takes 3 parameters: first name, last name, and then req ID
                         await SendScheduleInterviewMessage(context, name, reqId);
-                    } else
+                    }
+                    else
                     {
                         await SendHelpMessage(context, "I'm sorry, I did not understand you :(");
                     }
@@ -81,9 +90,23 @@ namespace TeamsTalentMgmtApp.Dialogs
                 {
                     await SendOpenPositionsMessage(context);
                 }
-                else if (cmd.Contains("adaptive"))
+                else if (cmd.Contains("candidate"))
                 {
-                    await SendAdaptiveMessage(context);
+                    // Supports either structured query or via user input.
+                    JObject ctx = activity.Value as JObject;
+                    Candidate c = null;
+
+                    if (ctx != null)
+                    {
+                        c = ctx.ToObject<Candidate>();
+                        await SendCandidateDetailsMessage(context, c);
+                    }
+                    else if (keywords.Length > 0)
+                    {
+                        string name = string.Join(" ", keywords);
+                        c = new CandidatesDataController().GetCandidateByName(name);
+                        await SendCandidateDetailsMessage(context, c);
+                    }
                 }
                 else if (cmd.Contains("assign"))
                 {
@@ -102,6 +125,10 @@ namespace TeamsTalentMgmtApp.Dialogs
                 {
                     await SendHelpMessage(context, "Sure, I can provide help info about me.");
                 }
+                else if (text.Contains("login"))
+                {
+                    //await SendOAuthCardAsync(context, activity);
+                }
                 else if (text.Contains("welcome") || text.Contains("hello") || text.Contains("hi"))
                 {
                     await SendHelpMessage(context, "## Welcome to the Contoso Talent Management app");
@@ -118,6 +145,36 @@ namespace TeamsTalentMgmtApp.Dialogs
 
         #region MessagingHelpers
 
+        /**
+        private async Task SendOAuthCardAsync(IDialogContext context, Activity activity)
+        {
+            await context.PostAsync($"To do this, you'll first need to sign in.");
+
+            var reply = activity.CreateReply();
+
+            var client = GetOAuthClient(activity, new MicrosoftAppCredentials(null, null));
+            var link = await client.OAuthApi.GetSignInLinkAsync(activity, ConnectionName);
+            reply.Attachments = new List<Attachment>() {
+                    new Attachment()
+                    {
+                        ContentType = SigninCard.ContentType,
+                        Content = new SigninCard()
+                        {
+                            Text = "You need to sign in to do this",
+                            Buttons = new CardAction[]
+                            {
+                                new CardAction() { Title = "Sign in", Value = link, Type = ActionTypes.Signin }
+                            },
+                        }
+                    }
+                };
+
+            await context.PostAsync(reply);
+
+            //context.Wait(WaitForToken);
+        }
+        */
+
         /// <summary>
         /// Helper method to send a simple help message.
         /// </summary>
@@ -127,18 +184,20 @@ namespace TeamsTalentMgmtApp.Dialogs
         private async Task SendHelpMessage(IDialogContext context, string firstLine)
         {
             var helpMessage = $"{firstLine} \n\n Here's what I can help you do: \n\n"
+                + "* Show details about a candidate, for example: candidate details John Smith 0F812D01 \n"
                 + "* Show top recent candidates for a Req ID, for example: top candidates 0F812D01 \n"
                 + "* Schedule interview for name and Req ID, for example: schedule interview John Smith 0F812D01 \n"
-                + "* List all my open positions";
+                + "* Create a new job posting \n"
+                + "* List all your open positions";
 
             await context.PostAsync(helpMessage);
         }
 
-        private async Task SendScheduleInterviewMessage(IDialogContext context, string name, string reqId)
+        private async Task SendScheduleInterviewMessage(IDialogContext context, Candidate c, string reqId)
         {
             InterviewRequest request = new InterviewRequest
             {
-                CandidateName = name,
+                Candidate = c,
                 Date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day),
                 PositionTitle = new OpenPositionsDataController().GetPositionForReqId(reqId).Title,
                 Remote = false,
@@ -148,13 +207,26 @@ namespace TeamsTalentMgmtApp.Dialogs
             await SendScheduleInterviewMessage(context, request);
         }
 
-        private async Task SendAdaptiveMessage(IDialogContext context)
+        private async Task SendScheduleInterviewMessage(IDialogContext context, string name, string reqId)
+        {
+            InterviewRequest request = new InterviewRequest
+            {
+                Candidate = new CandidatesDataController().GetCandidateByName(name),
+                Date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day),
+                PositionTitle = new OpenPositionsDataController().GetPositionForReqId(reqId).Title,
+                Remote = false,
+                ReqId = reqId
+            };
+
+            await SendScheduleInterviewMessage(context, request);
+        }
+
+        private async Task SendCandidateDetailsMessage(IDialogContext context, Candidate c)
         {
             IMessageActivity reply = context.MakeMessage();
             reply.Attachments = new List<Attachment>();
-            reply.Text = $"Here's your card:";
 
-            AdaptiveCard card = CardHelper.CreateAdaptiveCardForInterviewRequest(null, null);
+            AdaptiveCard card = CardHelper.CreateAdaptiveCardForCandidateInfo(c);
             Attachment attachment = new Attachment()
             {
                 ContentType = AdaptiveCard.ContentType,
@@ -174,7 +246,7 @@ namespace TeamsTalentMgmtApp.Dialogs
             reply.Attachments = new List<Attachment>();
             reply.Text = $"Here's your request to schedule an interview:";
 
-            O365ConnectorCard card = CardHelper.CreateCardForInterviewRequest(request, new CandidatesDataController().GetCandidateByName(request.CandidateName));
+            O365ConnectorCard card = CardHelper.CreateCardForInterviewRequest(request);
             reply.Attachments.Add(card.ToAttachment());
 
             ConnectorClient client = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
@@ -202,7 +274,7 @@ namespace TeamsTalentMgmtApp.Dialogs
             var candidates = new CandidatesDataController().GetTopCandidates(reqId);
             reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
 
-            foreach(Candidate c in candidates)
+            foreach (Candidate c in candidates)
             {
                 var card = CardHelper.CreateCardForCandidate(c);
                 reply.Attachments.Add(card.ToAttachment());
@@ -215,7 +287,7 @@ namespace TeamsTalentMgmtApp.Dialogs
 
         private async Task SendOpenPositionsMessage(IDialogContext context)
         {
-            var openPositions = new OpenPositionsDataController().ListOpenPositions();
+            var openPositions = new OpenPositionsDataController().ListOpenPositions(5);
 
             IMessageActivity reply = context.MakeMessage();
             reply.Attachments = new List<Attachment>();
