@@ -87,7 +87,7 @@ namespace TeamsTalentMgmtApp
                     foreach(Candidate c in controller.GetTopCandidates("ABCD1234"))
                     {
                         c.Name = c.Name.Split(' ')[0] + " " + CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name);
-                        var card = CardHelper.CreateCardForCandidate(c);
+                        var card = CardHelper.CreateSummaryCardForCandidate(c);
 
                         var composeExtensionAttachment = card.ToAttachment().ToComposeExtensionAttachment(CardHelper.CreatePreviewCardForCandidate(c).ToAttachment());
                         results.Attachments.Add(composeExtensionAttachment);

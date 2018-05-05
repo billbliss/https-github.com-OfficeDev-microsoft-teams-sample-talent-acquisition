@@ -28,6 +28,15 @@ namespace TeamsTalentMgmtApp.Utils
             "Pending",
             "Offered"
         };
+
+        public static List<string> Locations = new List<string>
+        {
+            "San Francisco",
+            "London",
+            "Singapore",
+            "Dubai",
+            "Frankfurt"
+        };
     }
 
     public class OpenPositionsDataController
@@ -42,6 +51,22 @@ namespace TeamsTalentMgmtApp.Utils
                 resp.Add(GeneratePosition());
             }
             return resp;
+        }
+
+        public OpenPosition CreatePosition(string title, int level, string location, string hiringManager)
+        {
+            OpenPosition pos = new OpenPosition()
+            {
+                HiringManager = hiringManager,
+                Level = level,
+                Location = location,
+                Title = title,
+                Applicants = 0,
+                DaysOpen = 0,
+                ReqId = (10082082 + new Random().Next(100)).ToString()
+            };
+
+            return pos;
         }
 
         public OpenPosition GetPositionForReqId(string reqId)
@@ -62,7 +87,9 @@ namespace TeamsTalentMgmtApp.Utils
                 DaysOpen = r.Next() % 10,
                 HiringManager = $"{faker.Name.FirstName()} {faker.Name.LastName()}",
                 Applicants = r.Next() % 5,
-                ReqId = Guid.NewGuid().ToString().Split('-')[0].ToUpper()
+                ReqId = Guid.NewGuid().ToString().Split('-')[0].ToUpper(),
+                Level = r.Next(7, 10),
+                Location = faker.PickRandom(Constants.Locations)
             };
 
             return p;

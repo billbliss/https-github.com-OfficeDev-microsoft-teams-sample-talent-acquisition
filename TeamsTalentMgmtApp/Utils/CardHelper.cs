@@ -23,7 +23,7 @@ namespace TeamsTalentMgmtApp.Utils
 
         #region Card Helpers
 
-        public static ThumbnailCard CreateCardForCandidate(Candidate c)
+        public static ThumbnailCard CreateSummaryCardForCandidate(Candidate c)
         {
             ThumbnailCard card = new ThumbnailCard()
             {
@@ -65,7 +65,7 @@ namespace TeamsTalentMgmtApp.Utils
             return card;
         }
 
-        public static AdaptiveCard CreateAdaptiveCardForCandidateInfo(Candidate c)
+        public static AdaptiveCard CreateFullCardForCandidate(Candidate c)
         {
             AdaptiveCard card = new AdaptiveCard();
             card.Body = new List<AdaptiveElement>();
@@ -245,6 +245,13 @@ namespace TeamsTalentMgmtApp.Utils
             };
 
             return card;
+        }
+
+        public static AdaptiveCard CreateCardForNewJobPosting()
+        {
+            string json = System.IO.File.ReadAllText(HttpContext.Current.Server.MapPath("~/newjobpostingtemplate.json"));
+
+            return AdaptiveCard.FromJson(json).Card;
         }
 
         // Helps create an O365 actionable message for a particular task.
