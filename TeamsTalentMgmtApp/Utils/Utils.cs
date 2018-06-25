@@ -173,6 +173,7 @@ namespace TeamsTalentMgmtApp.Utils
                 return "https://" + System.Web.HttpContext.Current.Request.Url.Host;
             }
         }
+
     }
 
     public class TabContext

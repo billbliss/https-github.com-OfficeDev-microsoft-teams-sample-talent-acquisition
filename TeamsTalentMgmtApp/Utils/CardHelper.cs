@@ -254,6 +254,13 @@ namespace TeamsTalentMgmtApp.Utils
             return AdaptiveCard.FromJson(json).Card;
         }
 
+        public static AdaptiveCard CreateExtendedCardForNewJobPosting()
+        {
+            string json = System.IO.File.ReadAllText(HttpContext.Current.Server.MapPath("~/newjobpostingtemplateextended.json"));
+
+            return AdaptiveCard.FromJson(json).Card;
+        }
+
         // Helps create an O365 actionable message for a particular task.
         public static O365ConnectorCard CreateCardForInterviewRequest(InterviewRequest request)
         {

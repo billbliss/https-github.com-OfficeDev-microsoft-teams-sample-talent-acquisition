@@ -1,7 +1,7 @@
 ﻿{
-  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-  "type": "AdaptiveCard",
-  "version": "1.0",
+	"$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+	"type": "AdaptiveCard",
+	"version": "1.0",
   "body": [
     {
       "type": "TextBlock",
@@ -31,7 +31,7 @@
       "columns": [
         {
           "type": "Column",
-          "width": 2,
+          "width": "stretch",
           "items": [
             {
               "type": "TextBlock",
@@ -50,44 +50,46 @@
         },
         {
           "type": "Column",
-          "width": 2,
+          "width": "stretch",
           "items": [
             {
               "type": "TextBlock",
-              "text": "Location"
+              "text": "Post by",
+              "wrap": true
             },
             {
-              "type": "Input.ChoiceSet",
-              "id": "jobLocation",
-              "style": "compact",
-              "value": "1",
-              "width":  "stretch",
-              "choices": [
-                {
-                  "title": "San Francisco",
-                  "value": "1"
-                },
-                {
-                  "title": "London",
-                  "value": "2"
-                },
-                {
-                  "title": "Singapore",
-                  "value": "3"
-                },
-                {
-                  "title": "Dubai",
-                  "value": "3"
-                },
-                {
-                  "title": "Frankfurt",
-                  "value": "3"
-                }
-              ]
+              "type": "Input.Date",
+              "placeholder": "Posting date",
+              "value": "5/9/2018",
+              "id": "jobPostingDate"
             }
           ]
         }
       ]
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "Location"
+        },
+        {
+          "type": "Input.Text",
+          "id": "jobLocation",
+          "placeholder":  "San Francisco, USA"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Short description"
+    },
+    {
+      "type": "Input.Text",
+      "id": "jobDescription",
+      "isMultiline":  true,
+      "placeholder": "E.g. Senior Product Manager in charge of driving complicated work and stuff."
     }
   ],
   "actions": [
@@ -96,19 +98,6 @@
       "title": "Create posting",
       "data": {
         "command": "createPosting"
-      }
-    },
-    {
-      "type": "Action.Submit",
-      "title": "Cancel"
-    },
-    {
-      "type": "Action.Submit",
-      "title": "Open form",
-      "data": {
-        "command": "CreatePostingExtended",
-        "commandId": "CreatePostingExtended",
-        "type": "startTask"
       }
     }
   ]

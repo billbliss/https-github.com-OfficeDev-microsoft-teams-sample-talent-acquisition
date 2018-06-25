@@ -5,7 +5,9 @@ using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Connector.Teams;
-using Microsoft.Bot.Connector.Teams.Models;
+using System.Configuration;
+using TeamsTalentMgmtApp.Utils;
+using Newtonsoft.Json.Linq;
 
 namespace TeamsTalentMgmtApp
 {
@@ -35,9 +37,15 @@ namespace TeamsTalentMgmtApp
 
                     // Return the response
                     return Request.CreateResponse(HttpStatusCode.OK, invokeResponse);
-                } else
+                } else if (activity.Name == "fileConsent/invoke")
                 {
-                    // Handle other types of Invoke activities here, e.g. CardActions
+                    // Try to replace with File uploaded card.
+                    return Request.CreateResponse(HttpStatusCode.OK);
+                } else if (activity.Name == "signin/verifyState")
+                {
+                    await HandleLoginVerification(activity);
+
+                    return Request.CreateResponse(HttpStatusCode.OK);
                 }
             }
             else
@@ -46,6 +54,25 @@ namespace TeamsTalentMgmtApp
             }
             var response = Request.CreateResponse(HttpStatusCode.OK);
             return response;
+        }
+
+        private async Task HandleLoginVerification(Activity invoke)
+        {
+            string connectionName = ConfigurationManager.AppSettings["ConnectionName"];
+            JObject ctx = invoke.Value as JObject;
+
+            if (ctx != null)
+            {
+                string code = ctx["code"].ToString();
+                var oauthClient = invoke.GetOAuthClient();
+                var token = await oauthClient.OAuthApi.GetUserTokenAsync(invoke.From.Id, connectionName, magicCode: invoke.Text).ConfigureAwait(false);
+                if (token != null)
+                {
+                    Microsoft.Graph.User current = await new GraphUtil(token.Token).GetMe();
+                    
+                    await context.PostAsync($"Success! You are now signed in as {current.DisplayName} with {current.Mail}");
+                }
+            }
         }
 
         /// <summary>

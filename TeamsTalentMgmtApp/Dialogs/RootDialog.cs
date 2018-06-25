@@ -53,7 +53,6 @@ namespace TeamsTalentMgmtApp.Dialogs
             }
             else
             {
-
                 // Supports 5 commands:  Help, Welcome (sent from HandleSystemMessage when bot is added), top candidates, schedule interview, and open positions.
                 // This simple text parsing assumes the command is the first two tokens, and an optional parameter is the second.
                 var split = text.Split(' ');
@@ -97,6 +96,32 @@ namespace TeamsTalentMgmtApp.Dialogs
                     {
                         await SendOpenPositionsMessage(context);
                     }
+                    else if (cmd.Contains("resume"))
+                    {
+                        // Return "resume file" for the given candidate name.
+                        if (keywords.Length > 0)
+                        {
+                            string name = string.Join(" ", keywords).ToLower();
+
+                            IMessageActivity reply = context.MakeMessage();
+                            reply.Attachments = new List<Attachment>();
+
+                            JObject card = new JObject();
+                            card["description"] = $"Here is the resume for {name}";
+                            card["sizeInBytes"] = 1500;
+
+                            Attachment attachment = new Attachment()
+                            {
+                                ContentType = "application/vnd.microsoft.teams.card.file.consent",
+                                Name = $"{name} resume.pdf",
+                                Content = card
+                            };
+
+                            reply.Attachments.Add(attachment);
+
+                            await context.PostAsync(reply);
+                        }
+                    }
                     else if (cmd.Contains("candidate"))
                     {
                         // Supports either structured query or via user input.
@@ -131,14 +156,27 @@ namespace TeamsTalentMgmtApp.Dialogs
                 }
                 else
                 {
-                    // Respond with standard help message.
-                    if (text.Contains("help"))
+                    int magicCode;
+                    if (int.TryParse(text, out magicCode))
                     {
+                        // If the user is pasting a magic number, check if that's to get an auth token.
+                        // TODO: This shouldn't be necessary once we make some small fixes to the bot auth service.
+                        var oauthClient = activity.GetOAuthClient();
+                        var token = await oauthClient.OAuthApi.GetUserTokenAsync(activity.From.Id, ConnectionName, magicCode: activity.Text).ConfigureAwait(false);
+                        if (token != null)
+                        {
+                            Microsoft.Graph.User current = await new GraphUtil(token.Token).GetMe();
+                            await context.PostAsync($"Success! You are now signed in as {current.DisplayName} with {current.Mail}");
+                        }
+                    }
+                    else if (text.Contains("help"))
+                    {
+                        // Respond with standard help message.
                         await SendHelpMessage(context, "Sure, I can provide help info about me.");
                     }
                     else if (text.Contains("login"))
                     {
-                        //await SendOAuthCardAsync(context, activity);
+                        await SendOAuthCardAsync(context, activity);
                     }
                     else if (text.Contains("welcome") || text.Contains("hello") || text.Contains("hi"))
                     {
@@ -157,35 +195,18 @@ namespace TeamsTalentMgmtApp.Dialogs
 
         #region MessagingHelpers
 
-        /**
+        /// <summary>
+        /// Send login prompt.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="activity"></param>
+        /// <returns></returns>
         private async Task SendOAuthCardAsync(IDialogContext context, Activity activity)
         {
-            await context.PostAsync($"To do this, you'll first need to sign in.");
-
-            var reply = activity.CreateReply();
-
-            var client = GetOAuthClient(activity, new MicrosoftAppCredentials(null, null));
-            var link = await client.OAuthApi.GetSignInLinkAsync(activity, ConnectionName);
-            reply.Attachments = new List<Attachment>() {
-                    new Attachment()
-                    {
-                        ContentType = SigninCard.ContentType,
-                        Content = new SigninCard()
-                        {
-                            Text = "You need to sign in to do this",
-                            Buttons = new CardAction[]
-                            {
-                                new CardAction() { Title = "Sign in", Value = link, Type = ActionTypes.Signin }
-                            },
-                        }
-                    }
-                };
-
-            await context.PostAsync(reply);
-
-            //context.Wait(WaitForToken);
+            var client = activity.GetOAuthClient();
+            var oauthReply = await activity.CreateOAuthReplyAsync(ConnectionName, "Please sign in to access talent services", "Sign in").ConfigureAwait(false);
+            await context.PostAsync(oauthReply);
         }
-        */
 
         /// <summary>
         /// Helper method to send a simple help message.
@@ -211,15 +232,15 @@ namespace TeamsTalentMgmtApp.Dialogs
 
             if (parameters != null)
             {
-                // Confirmation of job posting message.
                 if (parameters["command"].ToString() == "createPosting")
                 {
+                    // Confirmation of job posting message.
                     OpenPosition pos = new OpenPositionsDataController().CreatePosition(parameters["jobTitle"].ToString(), int.Parse(parameters["jobLevel"].ToString()),
                         Constants.Locations[int.Parse(parameters["jobLocation"].ToString())], activity.From.Name);
 
                     await SendNewPostingConfirmationMessage(context, pos);
                 }
-            } else if (activity.Attachments.Count > 0)
+            } else if (activity.Attachments.Any())
             {
                 // Handle file upload scenario.
                 if (activity.Attachments[0].ContentType == "application/vnd.microsoft.teams.file.download.info")
@@ -247,9 +268,7 @@ namespace TeamsTalentMgmtApp.Dialogs
             ThumbnailCard positionCard = CardHelper.CreateCardForPosition(pos, false);
             reply.Attachments.Add(positionCard.ToAttachment());
 
-            // Send the message back to the user.
-            ConnectorClient client = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
-            ResourceResponse resp = await client.Conversations.ReplyToActivityAsync((Activity)reply);
+            await context.PostAsync(reply);
         }
 
         private async Task SendScheduleInterviewMessage(IDialogContext context, Candidate c, string reqId)
@@ -280,8 +299,7 @@ namespace TeamsTalentMgmtApp.Dialogs
 
             reply.Attachments.Add(attachment);
 
-            ConnectorClient client = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
-            ResourceResponse resp = await client.Conversations.ReplyToActivityAsync((Activity)reply);
+            await context.PostAsync(reply);
         }
 
         private async Task SendScheduleInterviewMessage(IDialogContext context, string name, string reqId)
@@ -313,8 +331,7 @@ namespace TeamsTalentMgmtApp.Dialogs
             reply.Attachments.Add(attachment);
             System.Diagnostics.Debug.WriteLine(card.ToJson());
 
-            ConnectorClient client = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
-            ResourceResponse resp = await client.Conversations.ReplyToActivityAsync((Activity)reply);
+            await context.PostAsync(reply);
         }
 
         // Send a message with a list of found tasks.
@@ -359,8 +376,7 @@ namespace TeamsTalentMgmtApp.Dialogs
             }
 
             // Send the message back to the user.
-            ConnectorClient client = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
-            ResourceResponse resp = await client.Conversations.ReplyToActivityAsync((Activity)reply);
+            await context.PostAsync(reply);
         }
 
         private async Task SendOpenPositionsMessage(IDialogContext context)
@@ -385,9 +401,7 @@ namespace TeamsTalentMgmtApp.Dialogs
                 new CardAction("messageBack", "Add new job posting", null, null, $"new job posting", "New job posting")
             };
             reply.Attachments.Add(buttonsCard.ToAttachment());
-
-            ConnectorClient client = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
-            ResourceResponse resp = await client.Conversations.ReplyToActivityAsync((Activity)reply);
+            await context.PostAsync(reply);
         }
 
         /// <summary>
@@ -418,9 +432,7 @@ namespace TeamsTalentMgmtApp.Dialogs
                 };
 
                 reply.Attachments.Add(card.ToAttachment());
-
-                ConnectorClient client = new ConnectorClient(new Uri(context.Activity.ServiceUrl));
-                ResourceResponse resp = await client.Conversations.UpdateActivityAsync(context.Activity.Conversation.Id, activityId, (Activity)reply);
+                await context.PostAsync(reply);
             }
             else
             {
