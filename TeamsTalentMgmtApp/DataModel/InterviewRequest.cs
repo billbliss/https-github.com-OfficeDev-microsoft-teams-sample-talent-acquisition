@@ -7,7 +7,7 @@ namespace TeamsTalentMgmtApp.DataModel
 {
     public class InterviewRequest
     {
-        public string CandidateName { get; set; }
+        public Candidate Candidate { get; set; }
         public string ReqId { get; set; }
         public string PositionTitle { get; set; }
         public bool Remote { get; set; }

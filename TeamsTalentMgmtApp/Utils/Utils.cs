@@ -28,22 +28,45 @@ namespace TeamsTalentMgmtApp.Utils
             "Pending",
             "Offered"
         };
+
+        public static List<string> Locations = new List<string>
+        {
+            "San Francisco",
+            "London",
+            "Singapore",
+            "Dubai",
+            "Frankfurt"
+        };
     }
 
     public class OpenPositionsDataController
     {
 
-        public List<OpenPosition> ListOpenPositions()
+        public List<OpenPosition> ListOpenPositions(int count)
         {
-            const int numPositions = 5;
-
             List<OpenPosition> resp = new List<OpenPosition>();
 
-            for (int i = 0; i < numPositions; i++)
+            for (int i = 0; i < count; i++)
             {
                 resp.Add(GeneratePosition());
             }
             return resp;
+        }
+
+        public OpenPosition CreatePosition(string title, int level, string location, string hiringManager)
+        {
+            OpenPosition pos = new OpenPosition()
+            {
+                HiringManager = hiringManager,
+                Level = level,
+                Location = location,
+                Title = title,
+                Applicants = 0,
+                DaysOpen = 0,
+                ReqId = (10082082 + new Random().Next(100)).ToString()
+            };
+
+            return pos;
         }
 
         public OpenPosition GetPositionForReqId(string reqId)
@@ -64,7 +87,9 @@ namespace TeamsTalentMgmtApp.Utils
                 DaysOpen = r.Next() % 10,
                 HiringManager = $"{faker.Name.FirstName()} {faker.Name.LastName()}",
                 Applicants = r.Next() % 5,
-                ReqId = Guid.NewGuid().ToString().Split('-')[0].ToUpper()
+                ReqId = Guid.NewGuid().ToString().Split('-')[0].ToUpper(),
+                Level = r.Next(7, 10),
+                Location = faker.PickRandom(Constants.Locations)
             };
 
             return p;
@@ -95,6 +120,26 @@ namespace TeamsTalentMgmtApp.Utils
             return c;
         }
 
+        public List<Candidate> GetReferrals(Candidate c)
+        {
+            List<Candidate> referrals = new List<Candidate>();
+            for (int i = 0; i < 3; i++)
+            {
+                referrals.Add(GenerateCandidate(i+1));
+            }
+            return referrals;
+        }
+
+        public string GetCandidateBio(Candidate c)
+        {
+            return "Ten years of experience in the software industry. Five years experience working at a software consulting firm.";
+        }
+
+        /// <summary>
+        /// Index is 1-based, not 0-based
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private Candidate GenerateCandidate(int index)
         {
             Random r = new Random();
@@ -128,6 +173,7 @@ namespace TeamsTalentMgmtApp.Utils
                 return "https://" + System.Web.HttpContext.Current.Request.Url.Host;
             }
         }
+
     }
 
     public class TabContext
